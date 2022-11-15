@@ -3,7 +3,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
+import '../../../get_navigation/src/router_report.dart';
 import '../../../instance_manager.dart';
 import '../../get_state_manager.dart';
 import 'list_notifier.dart';
@@ -43,7 +45,7 @@ class GetBuilder<T extends GetxController> extends StatelessWidget {
       dispose,
       didChangeDependencies;
   final void Function(Binder<T> oldWidget, BindElement<T> state)?
-      didUpdateWidget;
+  didUpdateWidget;
   final T? init;
 
   const GetBuilder({
@@ -115,36 +117,50 @@ abstract class Bind<T> extends StatelessWidget {
       dispose,
       didChangeDependencies;
   final void Function(Binder<T> oldWidget, BindElement<T> state)?
-      didUpdateWidget;
+  didUpdateWidget;
 
   final Widget? child;
 
-  static Bind put<S>(
-    S dependency, {
+  static Bind put<S>(S dependency, {
     String? tag,
     bool permanent = false,
+    bool autoRemove = true,
   }) {
     Get.put<S>(dependency, tag: tag, permanent: permanent);
     return _FactoryBind<S>(
       autoRemove: permanent,
       assignId: true,
       tag: tag,
+      initState: (_) {
+        //onInit
+        //不能在initState中调用context.dependOnInheritedWidgetOfExactType,所以加个帧回调
+        SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+          RouterReportManager.instance
+              .reportDepeKey2BindRoute(Get.getKey(S, tag), ModalRoute.of(_));
+        });
+      },
     );
   }
 
-  static Bind lazyPut<S>(
-    InstanceBuilderCallback<S> builder, {
+  static Bind lazyPut<S>(InstanceBuilderCallback<S> builder, {
     String? tag,
     bool fenix = true,
     // VoidCallback? onInit,
     VoidCallback? onClose,
+    bool autoRemove = true,
   }) {
     Get.lazyPut<S>(builder, tag: tag, fenix: fenix);
     return _FactoryBind<S>(
       tag: tag,
-      // initState: (_) {
-      //   onInit?.call();
-      // },
+      autoRemove: autoRemove,
+      initState: (_) {
+        //onInit
+        //不能在initState中调用context.dependOnInheritedWidgetOfExactType,所以加个帧回调
+        SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
+          RouterReportManager.instance
+              .reportDepeKey2BindRoute(Get.getKey(S, tag), ModalRoute.of(_));
+        });
+      },
       dispose: (_) {
         onClose?.call();
       },
@@ -224,14 +240,13 @@ abstract class Bind<T> extends StatelessWidget {
         child: child,
       );
 
-  static T of<T>(
-    BuildContext context, {
+  static T of<T>(BuildContext context, {
     bool rebuild = false,
     // Object Function(T value)? filter,
   }) {
     final inheritedElement =
-        context.getElementForInheritedWidgetOfExactType<Binder<T>>()
-            as BindElement<T>?;
+    context.getElementForInheritedWidgetOfExactType<Binder<T>>()
+    as BindElement<T>?;
 
     if (inheritedElement == null) {
       throw BindError(controller: '$T', tag: null);
@@ -280,7 +295,7 @@ class _FactoryBind<T> extends Bind<T> {
       didChangeDependencies;
   @override
   final void Function(Binder<T> oldWidget, BindElement<T> state)?
-      didUpdateWidget;
+  didUpdateWidget;
 
   @override
   final Widget? child;
@@ -348,7 +363,8 @@ class Binds extends StatelessWidget {
     Key? key,
     required this.binds,
     required this.child,
-  })  : assert(binds.isNotEmpty),
+  })
+      : assert(binds.isNotEmpty),
         super(key: key);
 
   @override
@@ -392,7 +408,7 @@ class Binder<T> extends InheritedWidget {
       dispose,
       didChangeDependencies;
   final void Function(Binder<T> oldWidget, BindElement<T> state)?
-      didUpdateWidget;
+  didUpdateWidget;
 
   @override
   bool updateShouldNotify(Binder<T> oldWidget) {

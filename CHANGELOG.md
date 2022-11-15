@@ -1,3 +1,6 @@
+## [5.0.0]
+local custom update
+
 ## [4.6.1]
 Fix GetConnect on Flutter web
 
@@ -1419,3 +1422,10 @@ Now you can list your controllers in advance with Get.lazyPut, and only when it 
 ## [1.0.0] 
 
 - initial release
+  
+## 5.0.1
+
+  - fix: code error  
+## 5.0.2
+
+  - fix: revert analysis_options.yaml

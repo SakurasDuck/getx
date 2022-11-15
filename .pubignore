@@ -1,0 +1,6 @@
+!*.dart
+!lib/*
+!test/*
+!analysis_options.yaml
+!pubspec.yaml
+!README.md

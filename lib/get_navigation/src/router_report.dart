@@ -15,6 +15,9 @@ class RouterReportManager<T> {
   /// non-singleton instances.
   final Map<T?, HashSet<Function>> _routesByCreate = {};
 
+  ///保存bind 加载的depedencyKey,绑定到对应的context.route上
+  final Map<String, T> _depeKey2BindRoute = {};
+
   static RouterReportManager? _instance;
 
   RouterReportManager._();
@@ -32,31 +35,48 @@ class RouterReportManager<T> {
 
   T? _current;
 
+  ///获取可能bind的route,没有为current
+  T? _bindRoute(String depedencyKey) =>
+      _depeKey2BindRoute[depedencyKey] ?? _current;
+
   // ignore: use_setters_to_change_properties
   void reportCurrentRoute(T newRoute) {
     _current = newRoute;
   }
 
+  ///上报依赖绑定的对应的bindContext.route
+  void reportDepeKey2BindRoute(String depedencyKey, T? routeName) {
+    if (!_depeKey2BindRoute.containsKey(depedencyKey)) {
+      if (routeName != null) {
+        _depeKey2BindRoute.addAll({depedencyKey: routeName});
+      }
+    }
+  }
+
   /// Links a Class instance [S] (or [tag]) to the current route.
   /// Requires usage of `GetMaterialApp`.
   void reportDependencyLinkedToRoute(String depedencyKey) {
-    if (_current == null) return;
-    if (_routesKey.containsKey(_current)) {
-      _routesKey[_current!]!.add(depedencyKey);
+    final _bind = _bindRoute(depedencyKey);
+    if (_bind == null) return;
+    if (_routesKey.containsKey(_bind)) {
+      _routesKey[_bind]!.add(depedencyKey);
     } else {
-      _routesKey[_current] = <String>[depedencyKey];
+      _routesKey[_bind] = <String>[depedencyKey];
     }
   }
 
   void clearRouteKeys() {
     _routesKey.clear();
     _routesByCreate.clear();
+    _depeKey2BindRoute.clear();
   }
 
-  void appendRouteByCreate(GetLifeCycleMixin i) {
-    _routesByCreate[_current] ??= HashSet<Function>();
+  void appendRouteByCreate(GetLifeCycleMixin i, String depedencyKey) {
+    final _bind = _bindRoute(depedencyKey);
+    if (_bind == null) return;
+    _routesByCreate[_bind] ??= HashSet<Function>();
     // _routesByCreate[Get.reference]!.add(i.onDelete as Function);
-    _routesByCreate[_current]!.add(i.onDelete);
+    _routesByCreate[_bind]!.add(i.onDelete);
   }
 
   void reportRouteDispose(T disposed) {
@@ -89,6 +109,9 @@ class RouterReportManager<T> {
       //_routesKey.remove(element);
     }
 
+    //删除bind
+    _depeKey2BindRoute.remove(disposed);
+
     keysToRemove.clear();
   }
 
@@ -118,6 +141,9 @@ class RouterReportManager<T> {
         _routesKey[routeName]?.remove(element);
       }
     }
+
+    //删除bind
+    _depeKey2BindRoute.remove(routeName);
 
     keysToRemove.clear();
   }

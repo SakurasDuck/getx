@@ -170,6 +170,8 @@ abstract class _RxImpl<T> extends GetListenable<T> with RxObjectMixin<T> {
   void update(T Function(T? val) fn) {
     value = fn(value);
     // subject.add(value);
+    //update 强制刷新一次
+    refresh();
   }
 
   /// Following certain practices on Rx data, we might want to react to certain

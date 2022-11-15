@@ -31,7 +31,7 @@ class HttpRequestImpl implements HttpRequestBase {
   /// Sends an HTTP request and asynchronously returns the response.
   @override
   Future<Response<T>> send<T>(Request<T> request) async {
-    var bytes = await request.bodyBytes.toBytes();
+    final bytes = await request.bodyBytes.toBytes();
     HttpRequest xhr;
 
     xhr = HttpRequest()
@@ -45,10 +45,10 @@ class HttpRequestImpl implements HttpRequestBase {
       ..withCredentials = withCredentials;
     request.headers.forEach(xhr.setRequestHeader);
 
-    var completer = Completer<Response<T>>();
+    final completer = Completer<Response<T>>();
     xhr.onLoad.first.then((_) {
-      var blob = xhr.response as Blob? ?? Blob([]);
-      var reader = FileReader();
+      final blob = xhr.response as Blob? ?? Blob([]);
+      final reader = FileReader();
 
       reader.onLoad.first.then((_) async {
         var bodyBytes = BodyBytesStream.fromBytes(reader.result as List<int>);
