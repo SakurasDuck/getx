@@ -64,7 +64,7 @@ void main() {
     tree.addRoute(pageTree);
 
     // tree.addRoute(pageTree);
-    final searchRoute = '/city/work/office/pen';
+    const searchRoute = '/city/work/office/pen';
     final match = tree.matchRoute(searchRoute);
     expect(match, isNotNull);
     expect(match.route!.name, searchRoute);
@@ -120,7 +120,7 @@ void main() {
     //   tree.addRoute(p);
     // }
 
-    final searchRoute = '/city/work/office/pen';
+    const searchRoute = '/city/work/office/pen';
     final match = tree.matchRoute(searchRoute);
     expect(match, isNotNull);
     expect(match.route!.name, searchRoute);
@@ -160,13 +160,20 @@ void main() {
 
       expect(Get.parameters['id'], '1234');
       expect(Get.parameters['name'], 'ana');
+
+      Get.toNamed('/last/1234/ana/profile?job=dev');
+
+      await tester.pumpAndSettle();
+
+      expect(Get.parameters['id'], '1234');
+      expect(Get.parameters['name'], 'ana');
+      expect(Get.parameters['job'], 'dev');
     },
   );
 
   testWidgets(
     'params in url by parameters',
     (tester) async {
-      print("Iniciando test");
       await tester.pumpWidget(GetMaterialApp(
         initialRoute: '/first/juan',
         getPages: [

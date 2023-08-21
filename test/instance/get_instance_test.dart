@@ -55,12 +55,9 @@ void main() {
     final instance = Get.put<Controller>(Controller(), tag: 'one');
     final instance2 = Get.put<Controller>(Controller(), tag: 'two');
     expect(instance == instance2, false);
-    expect(Get.find<Controller>(tag: 'one') == Get.find<Controller>(tag: 'two'),
-        false);
-    expect(Get.find<Controller>(tag: 'one') == Get.find<Controller>(tag: 'one'),
-        true);
-    expect(Get.find<Controller>(tag: 'two') == Get.find<Controller>(tag: 'two'),
-        true);
+    expect(Get.find<Controller>(tag: 'one') == Get.find<Controller>(tag: 'two'), false);
+    expect(Get.find<Controller>(tag: 'one') == Get.find<Controller>(tag: 'one'), true);
+    expect(Get.find<Controller>(tag: 'two') == Get.find<Controller>(tag: 'two'), true);
     Get.reset();
   });
 
@@ -68,12 +65,9 @@ void main() {
     Get.lazyPut<Controller>(() => Controller(), tag: 'one');
     Get.lazyPut<Controller>(() => Controller(), tag: 'two');
 
-    expect(Get.find<Controller>(tag: 'one') == Get.find<Controller>(tag: 'two'),
-        false);
-    expect(Get.find<Controller>(tag: 'one') == Get.find<Controller>(tag: 'one'),
-        true);
-    expect(Get.find<Controller>(tag: 'two') == Get.find<Controller>(tag: 'two'),
-        true);
+    expect(Get.find<Controller>(tag: 'one') == Get.find<Controller>(tag: 'two'), false);
+    expect(Get.find<Controller>(tag: 'one') == Get.find<Controller>(tag: 'one'), true);
+    expect(Get.find<Controller>(tag: 'two') == Get.find<Controller>(tag: 'two'), true);
     Get.reset();
   });
 
@@ -101,7 +95,7 @@ void main() {
 
     expect(Get.find<Controller>().count, 1);
     Get.delete<Controller>();
-    expect(() => Get.find<Controller>(), throwsA(m.TypeMatcher<String>()));
+    expect(() => Get.find<Controller>(), throwsA(const m.TypeMatcher<String>()));
     Get.reset();
   });
 
@@ -161,12 +155,10 @@ void main() {
     test('Get.delete test with disposable controller', () async {
       // Get.put(DisposableController());
       expect(Get.delete<DisposableController>(), true);
-      expect(() => Get.find<DisposableController>(),
-          throwsA(m.TypeMatcher<String>()));
+      expect(() => Get.find<DisposableController>(), throwsA(const m.TypeMatcher<String>()));
     });
 
-    test('Get.put test after delete with disposable controller and init check',
-        () async {
+    test('Get.put test after delete with disposable controller and init check', () async {
       final instance = Get.put<DisposableController>(DisposableController());
       expect(instance, Get.find<DisposableController>());
       expect(instance.initialized, true);
@@ -192,7 +184,7 @@ void main() {
     });
 
     test('tagged temporary', () async {
-      final tag = 'tag';
+      const tag = 'tag';
       Get.put(DisposableController(), tag: tag);
       Get.replace<DisposableController>(Controller(), tag: tag);
       final instance = Get.find<DisposableController>(tag: tag);
@@ -201,7 +193,7 @@ void main() {
     });
 
     test('tagged permanent', () async {
-      final tag = 'tag';
+      const tag = 'tag';
       Get.put(DisposableController(), permanent: true, tag: tag);
       Get.replace<DisposableController>(Controller(), tag: tag);
       final instance = Get.find<DisposableController>(tag: tag);
@@ -210,7 +202,7 @@ void main() {
     });
 
     test('a generic parent type', () async {
-      final tag = 'tag';
+      const tag = 'tag';
       Get.put<MyController>(DisposableController(), permanent: true, tag: tag);
       Get.replace<MyController>(Controller(), tag: tag);
       final instance = Get.find<MyController>(tag: tag);
@@ -250,6 +242,20 @@ void main() {
       expect((Get.find<DisposableController>() as Controller).count, 1);
       Get.delete<DisposableController>();
       expect((Get.find<DisposableController>() as Controller).count, 0);
+    });
+  });
+
+  group('Get.findOrNull test', () {
+    tearDown(Get.reset);
+    test('checking results', () async {
+      Get.put<int>(1);
+      int? result = Get.findOrNull<int>();
+      expect(result, 1);
+      
+      Get.delete<int>();
+      result = Get.findOrNull<int>();
+      expect(result, null);
+
     });
   });
 }
